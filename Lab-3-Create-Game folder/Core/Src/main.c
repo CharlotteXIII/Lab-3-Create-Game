@@ -33,7 +33,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define EEPROM_ADDR 0b10100000
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -49,8 +49,17 @@ DMA_HandleTypeDef hdma_lpuart1_tx;
 DMA_HandleTypeDef hdma_lpuart1_rx;
 
 /* USER CODE BEGIN PV */
+
+// For Send Value to NUcleoG747RE "
 uint8_t Tx[] = "Hello_Boss";
 uint8_t Rx[20];
+
+// I2C Part //
+uint8_t eepromExampleWriteFlag = 0;
+uint8_t eepromExampleReadFlag = 0;
+uint8_t eepromDataReadBack[20];
+
+// Test Number //
 int A = 0;
 /* USER CODE END PV */
 
@@ -61,8 +70,14 @@ static void MX_DMA_Init(void);
 static void MX_LPUART1_UART_Init(void);
 static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
+
+// STM32 Part //
 void TxSend();
 void Dummy();
+
+// I2C Part //
+void EEPROMWriteExample();
+void EEPROMReadExample(uint8_t *Rdata, uint16_t len);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -114,8 +129,15 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  // STM32 Part //
 	  TxSend();
 	  Dummy();
+
+
+	  // I2C part //
+	  EEPROMWriteExample();
+	  EEPROMReadExample(eepromDataReadBack, 20);
+
   }
   /* USER CODE END 3 */
 }
@@ -323,12 +345,33 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+// Test Send Value To NucleoG474RE //
 void TxSend(){
 	if(A==1){
 	HAL_UART_Transmit_DMA(&hlpuart1,Tx, strlen((char*)Tx));
 	A=0;
 	}
 }
+
+// I2C PART //
+void EEPROMWriteExample() {
+	if (eepromExampleWriteFlag && hi2c1.State == HAL_I2C_STATE_READY) {
+	static uint8_t data[4] = { 0xff, 0x00, 0x55, 0x49 };
+		HAL_I2C_Mem_Write_IT(&hi2c1, EEPROM_ADDR, 0x2C, I2C_MEMADD_SIZE_16BIT,data, 4);
+
+		eepromExampleWriteFlag = 0;
+	}
+}
+void EEPROMReadExample(uint8_t *Rdata, uint16_t len) {
+	if (eepromExampleReadFlag && hi2c1.State == HAL_I2C_STATE_READY) {
+		HAL_I2C_Mem_Read_IT(&hi2c1, EEPROM_ADDR, 0x2c, I2C_MEMADD_SIZE_16BIT,Rdata, len);
+		eepromExampleReadFlag = 0;
+	}
+}
+
+
+
+// For LD2 Test //
 void Dummy(){
 	static uint32_t timestamp=0;
 	if(HAL_GetTick()>=timestamp){
