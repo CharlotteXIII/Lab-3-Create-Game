@@ -45,22 +45,35 @@
 I2C_HandleTypeDef hi2c1;
 
 UART_HandleTypeDef hlpuart1;
+UART_HandleTypeDef huart1;
 DMA_HandleTypeDef hdma_lpuart1_tx;
 DMA_HandleTypeDef hdma_lpuart1_rx;
+DMA_HandleTypeDef hdma_usart1_rx;
+DMA_HandleTypeDef hdma_usart1_tx;
 
 /* USER CODE BEGIN PV */
 
-// For Send Value to NUcleoG747RE "
-uint8_t Tx[] = "Hello_Boss";
-uint8_t Rx[20];
+// For Send Questions to PuTTy "
+uint8_t Hx[30] = "Quiz The Question !\n\r";
+uint8_t Tx1[100] = "1). 1 + 1 = 2 ? (y/n)\n\r";
+uint8_t Tx2[100] = "2). Microcon is EZ ! (y/n)\n\r";
+uint8_t Tx3[100] = "3). Boss is handsome.(y/n)\n\r";
+uint8_t Ax1[40] = "Your answer is ?:\n\r";
+uint8_t GetAns[2];
+uint8_t res1[30] = "You answered Yes.\r\n";
+uint8_t res2[30] = "You answered No.\r\n";
+uint8_t ToT[30] = "Your Total Score is:";
+int score = 0;
+int mode;
+uint8_t Rx[1] = {0x57};//Send to I2C
 
 // I2C Part //
 uint8_t eepromExampleWriteFlag = 0;
 uint8_t eepromExampleReadFlag = 0;
-uint8_t eepromDataReadBack[20];
+uint8_t eepromDataReadBack[4];
 
 // Test Number //
-int A = 0;
+int A = 8;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -69,10 +82,10 @@ static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_LPUART1_UART_Init(void);
 static void MX_I2C1_Init(void);
+static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
 // STM32 Part //
-void TxSend();
 void Dummy();
 
 // I2C Part //
@@ -116,10 +129,9 @@ int main(void)
   MX_DMA_Init();
   MX_LPUART1_UART_Init();
   MX_I2C1_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-//Test
-//uint8_t test[] = "Hello w";
-//HAL_UART_Transmit_DMA(&hlpuart1, test, 11, 10);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -130,14 +142,108 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 	  // STM32 Part //
-	  TxSend();
-	  Dummy();
 
+//	  TxSend();
+	  Dummy();
+	  HAL_UART_Receive_DMA(&hlpuart1, GetAns, 2);
+	if(A==8){
+	  HAL_UART_Transmit(&hlpuart1,Hx, strlen(Hx), 4);
+	  HAL_UART_Transmit(&hlpuart1,"-------------------------\n\r",strlen("-------------------------\n\r"), 8);
+	  HAL_UART_Transmit(&hlpuart1,Lx, strlen(Lx), 4);
+	  A=1;
+	}
+// Question 1 //
+		if(A == 1){
+			HAL_Delay(1000);
+			HAL_UART_Transmit(&hlpuart1,Tx1, 100,10);
+			HAL_UART_Transmit(&hlpuart1,Ax1, 40,10);
+			A = 0;
+			mode = 1;
+		}
+		if(mode == 1){
+			if(GetAns[0] == 'y' && GetAns[1] == '\r' && mode == 1){
+				HAL_UART_Transmit(&hlpuart1, res1, 30, 10);
+				HAL_UART_Transmit(&hlpuart1,"*********\n\r",strlen("**********\n\r"), 8);
+				score =+ 1;
+				A = 2;
+				GetAns[0]=0;
+				GetAns[1]=0;
+			}
+			else if(GetAns[0] == 'n' && GetAns[1] == '\r' && mode == 1){
+				HAL_UART_Transmit(&hlpuart1, res2, 30, 10);
+				HAL_UART_Transmit(&hlpuart1,"*********\n\r",strlen("**********\n\r"), 8);
+				A = 2;
+				GetAns[0]=0;
+				GetAns[1]=0;
+			}
+//			else if(GetAns[0] != 0 && GetAns[1] != 0){
+//				char response[] = "Invalid Answer, Try Again.\r\n";
+//				HAL_UART_Transmit(&huart1,response, strlen(response), 10);
+//				A = 1;
+//				mode = 0;
+//				GetAns[0]=0;
+//				GetAns[1]=0;
+//			}
+		}
+// Question 2 //
+		if(A == 2){
+			HAL_Delay(500);
+			HAL_UART_Transmit(&hlpuart1,Tx2, 100,10);
+			HAL_UART_Transmit(&hlpuart1,Ax1, 40,10);
+			A = 0;
+			mode = 2;
+		}
+		if(mode == 2){
+			if(GetAns[0] == 'y' && GetAns[1] == '\r' && mode == 2){
+				HAL_UART_Transmit(&hlpuart1, res1, 30, 10);
+				HAL_UART_Transmit(&hlpuart1,"*********\n\r",strlen("**********\n\r"), 8);
+				A = 3;
+				GetAns[0]=0;
+				GetAns[1]=0;
+			}
+			else if(GetAns[0] == 'n' && GetAns[1] == '\r' && mode == 2){
+				HAL_UART_Transmit(&hlpuart1, res2, 30, 10);
+				HAL_UART_Transmit(&hlpuart1,"*********\n\r",strlen("**********\n\r"), 8);
+				score = score + 1;
+				A = 3;
+				GetAns[0]=0;
+				GetAns[1]=0;
+			}
+		}
+// Question 3 //
+		if(A == 3){
+			HAL_Delay(500);
+			HAL_UART_Transmit(&hlpuart1,Tx3, 100,10);
+			HAL_UART_Transmit(&hlpuart1,Ax1, 40,10);
+			A = 0;
+			mode = 3;
+		}
+		if(mode == 3){
+			if(GetAns[0] == 'y' && GetAns[1] == '\r' && mode == 3){
+				HAL_UART_Transmit(&hlpuart1, res1, 30, 10);
+				HAL_UART_Transmit(&hlpuart1,"*********\n\r",strlen("**********\n\r"), 8);
+				score = score + 1;
+				A = 4;
+				GetAns[0]=0;
+				GetAns[1]=0;
+			}
+			else if(GetAns[0] == 'n' && GetAns[1] == '\r' && mode == 3){
+				HAL_UART_Transmit(&hlpuart1, res2, 30, 10);
+				HAL_UART_Transmit(&hlpuart1,"*********\n\r",strlen("**********\n\r"), 8);
+				A = 4;
+				GetAns[0]=0;
+				GetAns[1]=0;
+			}
+		}
+
+		if(A == 4){
+			HAL_UART_Transmit(&hlpuart1, ToT, 30, 10);
+			A=0;
+		}
 
 	  // I2C part //
 	  EEPROMWriteExample();
-	  EEPROMReadExample(eepromDataReadBack, 20);
-
+	  EEPROMReadExample(eepromDataReadBack, 4);
   }
   /* USER CODE END 3 */
 }
@@ -284,6 +390,54 @@ static void MX_LPUART1_UART_Init(void)
 }
 
 /**
+  * @brief USART1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART1_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART1_Init 0 */
+
+  /* USER CODE END USART1_Init 0 */
+
+  /* USER CODE BEGIN USART1_Init 1 */
+
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 115200;
+  huart1.Init.WordLength = UART_WORDLENGTH_9B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_EVEN;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart1.Init.ClockPrescaler = UART_PRESCALER_DIV1;
+  huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_SetTxFifoThreshold(&huart1, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_SetRxFifoThreshold(&huart1, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_DisableFifoMode(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART1_Init 2 */
+
+  /* USER CODE END USART1_Init 2 */
+
+}
+
+/**
   * Enable DMA controller clock
   */
 static void MX_DMA_Init(void)
@@ -300,6 +454,12 @@ static void MX_DMA_Init(void)
   /* DMA1_Channel2_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Channel2_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel2_IRQn);
+  /* DMA1_Channel3_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel3_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel3_IRQn);
+  /* DMA1_Channel4_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel4_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel4_IRQn);
 
 }
 
@@ -345,18 +505,15 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-// Test Send Value To NucleoG474RE //
-void TxSend(){
-	if(A==1){
-	HAL_UART_Transmit_DMA(&hlpuart1,Tx, strlen((char*)Tx));
-	A=0;
-	}
-}
 
 // I2C PART //
 void EEPROMWriteExample() {
 	if (eepromExampleWriteFlag && hi2c1.State == HAL_I2C_STATE_READY) {
-	static uint8_t data[4] = { 0xff, 0x00, 0x55, 0x49 };
+	static uint8_t data[4];
+	 data[0]=Rx[0];
+	 data[1]=0x00;
+	 data[2]=0x00;
+	 data[3]=0x00;
 		HAL_I2C_Mem_Write_IT(&hi2c1, EEPROM_ADDR, 0x2C, I2C_MEMADD_SIZE_16BIT,data, 4);
 
 		eepromExampleWriteFlag = 0;
