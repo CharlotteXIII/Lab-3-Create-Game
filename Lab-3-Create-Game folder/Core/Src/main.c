@@ -62,10 +62,16 @@ uint8_t Ax1[40] = "Your answer is ?:\n\r";
 uint8_t GetAns[2];
 uint8_t res1[30] = "You answered Yes.\r\n";
 uint8_t res2[30] = "You answered No.\r\n";
-uint8_t ToT[30] = "Your Total Score is:";
-int score = 0;
+uint8_t ToT[30] = "-*Scoreboard*-\n\r";
+uint8_t ToT2[50] = "Top Score : Boss : 100 points\n\r";
+uint8_t ToT3[50] = "Your Score : You : x points\n\r";
+uint8_t s1 = 0;
+uint8_t s2 = 0;
+uint8_t s3 = 0;
+uint8_t readtotal = 0;
 int mode;
-uint8_t Rx[1] = {0x57};//Send to I2C
+
+uint8_t TotalScore = 0;//Send to I2C
 
 // I2C Part //
 uint8_t eepromExampleWriteFlag = 0;
@@ -149,7 +155,6 @@ int main(void)
 	if(A==8){
 	  HAL_UART_Transmit(&hlpuart1,Hx, strlen(Hx), 4);
 	  HAL_UART_Transmit(&hlpuart1,"-------------------------\n\r",strlen("-------------------------\n\r"), 8);
-	  HAL_UART_Transmit(&hlpuart1,Lx, strlen(Lx), 4);
 	  A=1;
 	}
 // Question 1 //
@@ -164,7 +169,7 @@ int main(void)
 			if(GetAns[0] == 'y' && GetAns[1] == '\r' && mode == 1){
 				HAL_UART_Transmit(&hlpuart1, res1, 30, 10);
 				HAL_UART_Transmit(&hlpuart1,"*********\n\r",strlen("**********\n\r"), 8);
-				score =+ 1;
+				s1 =+ 1;
 				A = 2;
 				GetAns[0]=0;
 				GetAns[1]=0;
@@ -204,7 +209,7 @@ int main(void)
 			else if(GetAns[0] == 'n' && GetAns[1] == '\r' && mode == 2){
 				HAL_UART_Transmit(&hlpuart1, res2, 30, 10);
 				HAL_UART_Transmit(&hlpuart1,"*********\n\r",strlen("**********\n\r"), 8);
-				score = score + 1;
+				s2 =+ 1;
 				A = 3;
 				GetAns[0]=0;
 				GetAns[1]=0;
@@ -222,7 +227,7 @@ int main(void)
 			if(GetAns[0] == 'y' && GetAns[1] == '\r' && mode == 3){
 				HAL_UART_Transmit(&hlpuart1, res1, 30, 10);
 				HAL_UART_Transmit(&hlpuart1,"*********\n\r",strlen("**********\n\r"), 8);
-				score = score + 1;
+				s3 =+ 1;
 				A = 4;
 				GetAns[0]=0;
 				GetAns[1]=0;
@@ -238,7 +243,15 @@ int main(void)
 
 		if(A == 4){
 			HAL_UART_Transmit(&hlpuart1, ToT, 30, 10);
-			A=0;
+			HAL_UART_Transmit(&hlpuart1, ToT2, 50, 10);
+			HAL_UART_Transmit(&hlpuart1, ToT3, 50, 10);
+			TotalScore = s1+s2+s3;
+			eepromExampleWriteFlag = 1;
+			eepromExampleReadFlag = 1;
+			A=5;
+		}
+		if(A == 5){
+
 		}
 
 	  // I2C part //
@@ -508,15 +521,17 @@ static void MX_GPIO_Init(void)
 
 // I2C PART //
 void EEPROMWriteExample() {
+	if(eepromExampleWriteFlag == 1){
 	if (eepromExampleWriteFlag && hi2c1.State == HAL_I2C_STATE_READY) {
 	static uint8_t data[4];
-	 data[0]=Rx[0];
+	 data[0]=TotalScore;
 	 data[1]=0x00;
 	 data[2]=0x00;
 	 data[3]=0x00;
 		HAL_I2C_Mem_Write_IT(&hi2c1, EEPROM_ADDR, 0x2C, I2C_MEMADD_SIZE_16BIT,data, 4);
 
 		eepromExampleWriteFlag = 0;
+	}
 	}
 }
 void EEPROMReadExample(uint8_t *Rdata, uint16_t len) {
