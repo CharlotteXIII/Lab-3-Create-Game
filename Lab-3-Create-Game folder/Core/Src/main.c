@@ -81,13 +81,13 @@ uint8_t TotalScore = 0;//Send to I2C
 // I2C Part //
 uint8_t WriteFlag = 0;
 uint8_t ReadFlag = 0;
-uint8_t ReadBack[1];
+int ReadBack[1] = {5};
 
 // Test Number //
 int A = 8;
-int B = 0;
+int B = 5;
 int C = 0;
-int D[1];
+int D[4] = {0,1,2,3};
 int State;
 /* USER CODE END PV */
 
@@ -271,42 +271,60 @@ int main(void)
 			A = 9 ;
 		}
 
-			if(State == 1 && A == 9){
-//				strcpy(D,ReadBack);//push readback in D array
-//				D[0] = strtol(ReadBack[0], NULL, 16);
-//				D[0] = ReadBack[0];
-				HAL_Delay(1000);
-				A = 10;
-				HAL_Delay(1000);
-			}
+//			if(State == 1 && A == 9){
+////				strcpy(D,ReadBack);//push readback in D array
+////				D[0] = strtol(ReadBack[0], NULL, 16);
+////				D[0] = ReadBack[0];
+////				HAL_Delay(1000);
+//				A = 10;
+////				HAL_Delay(1000);
+//			}
 
-			if(A==10){
-				if (ReadBack[0] == 0){
-					B = 4;
-					HAL_UART_Transmit(&hlpuart1, S, 50, 10);
-					State = 0;
-				}
-				else if(ReadBack[0] == 1){
+
+//				if (ReadBack[0] == D[0] ){
+//					B = 4;
+//					HAL_UART_Transmit(&hlpuart1, S, 50, 10);
+//					State = 0;
+//				}
+
+//				if(ReadBack[0] == 0 && A == 9){
+//					B = 4;
+//					HAL_UART_Transmit(&hlpuart1, S, 50, 10);
+//					State = 0;
+//					A = 10;
+//				}
+				if(ReadBack[0] == 1 && A == 9){
 					B = 1;
 					HAL_UART_Transmit(&hlpuart1, S1, 50, 10);
 					State = 0;
+					A = 10;
 				}
-				else if(ReadBack[0] == 2){
+				if(ReadBack[0] == 2 && A == 9){
 					B = 2;
 					HAL_UART_Transmit(&hlpuart1, S2, 50, 10);
 					State = 0;
+					A = 10;
 				}
-				else if(ReadBack[0] == 3){
+				if(ReadBack[0] == 3 && A == 9){
 					B = 3;
 					HAL_UART_Transmit(&hlpuart1, S3, 50, 10);
 					State = 0;
+					A = 10;
 				}
-				HAL_UART_Transmit(&hlpuart1,"YOU ARE NOOB,LOSER UwU.\n\r", 50, 10);
-				A=11;
-		}
-			if(A==11){
-				A=0;
-			}
+				if(ReadBack[0] == 0 && A == 9){
+					B = 4;
+					HAL_UART_Transmit(&hlpuart1, S, 50, 10);
+					State = 0;
+					A = 10;
+				}
+
+
+				if(State == 0 && B != 0 && A == 10){
+					HAL_UART_Transmit(&hlpuart1,"YOU ARE NOOB,LOSER UwU.\n\r", 50, 10);
+					State = 9;
+				}if(State == 9){A=11; break; }
+
+
   EEPROMWriteExample();
   EEPROMReadExample(ReadBack, 1);
   }
