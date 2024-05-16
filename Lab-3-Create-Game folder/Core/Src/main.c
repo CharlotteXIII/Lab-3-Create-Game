@@ -43,6 +43,8 @@
 
 /* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c1;
+DMA_HandleTypeDef hdma_i2c1_rx;
+DMA_HandleTypeDef hdma_i2c1_tx;
 
 UART_HandleTypeDef hlpuart1;
 UART_HandleTypeDef huart1;
@@ -84,6 +86,7 @@ uint8_t ReadBack[1];
 int A = 8;
 int B = 0;
 int C = 0;
+uint8_t D = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -265,19 +268,20 @@ int main(void)
 			A=7;
 		}
 		if(A == 7){
-			if (ReadBack[0] == 0){
+			D = ReadBack[0];
+			if (D == 0){
 				B = 4;
 				HAL_UART_Transmit(&hlpuart1, S, 50, 10);
 			}
-			else if(ReadBack[0] == 1){
+			else if(D == 1){
 				B = 1;
 				HAL_UART_Transmit(&hlpuart1, S1, 50, 10);
 			}
-			else if(ReadBack[0] == 2){
+			else if(D == 2){
 				B = 2;
 				HAL_UART_Transmit(&hlpuart1, S2, 50, 10);
 			}
-			else if(ReadBack[0] == 3){
+			else if(D == 3){
 				B = 3;
 				HAL_UART_Transmit(&hlpuart1, S3, 50, 10);
 			}
@@ -502,6 +506,12 @@ static void MX_DMA_Init(void)
   /* DMA1_Channel4_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Channel4_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel4_IRQn);
+  /* DMA1_Channel5_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel5_IRQn);
+  /* DMA1_Channel6_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel6_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel6_IRQn);
 
 }
 
