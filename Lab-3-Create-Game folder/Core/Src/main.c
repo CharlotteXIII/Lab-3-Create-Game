@@ -78,11 +78,12 @@ uint8_t TotalScore = 0;//Send to I2C
 // I2C Part //
 uint8_t WriteFlag = 0;
 uint8_t ReadFlag = 0;
-uint8_t eepromDataReadBack[4];
+uint8_t ReadBack[1];
 
 // Test Number //
 int A = 8;
 int B = 0;
+int C = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -140,7 +141,7 @@ int main(void)
   MX_I2C1_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  HAL_Delay(100);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -151,8 +152,6 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 	  // STM32 Part //
-
-//	  TxSend();
 	  Dummy();
 	  HAL_UART_Receive_DMA(&hlpuart1, GetAns, 2);
 	if(A==8){
@@ -255,27 +254,30 @@ int main(void)
 		if(A == 5){
 			HAL_Delay(1000);
 			WriteFlag = 1;
+			C = 1;
 			A=6;
 		}
 		if(A == 6){
-			HAL_Delay(1000);
-			ReadFlag = 1;
-			A = 7;
+			if(C == 1){
+				ReadFlag = 1;
+				C = 0;
+			}
+			A=7;
 		}
 		if(A == 7){
-			if (eepromDataReadBack[0] == 0){
+			if (ReadBack[0] == 0){
 				B = 4;
 				HAL_UART_Transmit(&hlpuart1, S, 50, 10);
 			}
-			else if(eepromDataReadBack[0] == 1){
+			else if(ReadBack[0] == 1){
 				B = 1;
 				HAL_UART_Transmit(&hlpuart1, S1, 50, 10);
 			}
-			else if(eepromDataReadBack[0] == 2){
+			else if(ReadBack[0] == 2){
 				B = 2;
 				HAL_UART_Transmit(&hlpuart1, S2, 50, 10);
 			}
-			else if(eepromDataReadBack[0] == 3){
+			else if(ReadBack[0] == 3){
 				B = 3;
 				HAL_UART_Transmit(&hlpuart1, S3, 50, 10);
 			}
@@ -283,7 +285,7 @@ int main(void)
 			A=0;
 		}
   EEPROMWriteExample();
-  EEPROMReadExample(eepromDataReadBack, 1);
+  EEPROMReadExample(ReadBack, 1);
   }
   /* USER CODE END 3 */
 }
@@ -555,7 +557,6 @@ void EEPROMWriteExample() {
 	 data[2]=0x00;
 	 data[3]=0x00;
 		HAL_I2C_Mem_Write_IT(&hi2c1, EEPROM_ADDR, 0x2C, I2C_MEMADD_SIZE_16BIT,data, 1);
-
 		WriteFlag = 0;
 	}
 }
