@@ -23,6 +23,7 @@
 /* USER CODE BEGIN Includes */
 #include "stdio.h"
 #include "string.h"
+#include "stdlib.h"
 
 /* USER CODE END Includes */
 
@@ -86,7 +87,8 @@ uint8_t ReadBack[1];
 int A = 8;
 int B = 0;
 int C = 0;
-uint8_t D[1];
+int D[1];
+int State;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -165,6 +167,7 @@ int main(void)
 // Question 1 //
 		if(A == 1){
 			HAL_Delay(1000);
+
 			HAL_UART_Transmit(&hlpuart1,Tx1, 100,10);
 			HAL_UART_Transmit(&hlpuart1,Ax1, 40,10);
 			A = 0;
@@ -258,36 +261,52 @@ int main(void)
 			HAL_Delay(1000);
 			WriteFlag = 1;
 			C = 1;
-			A=6;
-		}
-		if(A == 6){
-			if(C == 1){
-				ReadFlag = 1;
-				C = 0;
-			}
 			A=7;
 		}
 		if(A == 7){
-			strcpy(D,ReadBack);//push readback in D array
-			if (D[0] == 0){
-				B = 4;
-				HAL_UART_Transmit(&hlpuart1, S, 50, 10);
-			}
-			else if(D[0] == 1){
-				B = 1;
-				HAL_UART_Transmit(&hlpuart1, S1, 50, 10);
-			}
-			else if(D[0] == 2){
-				B = 2;
-				HAL_UART_Transmit(&hlpuart1, S2, 50, 10);
-			}
-			else if(D[0] == 3){
-				B = 3;
-				HAL_UART_Transmit(&hlpuart1, S3, 50, 10);
-			}
-			HAL_UART_Transmit(&hlpuart1,"YOU ARE NOOB,LOSER UwU.\n\r", 50, 10);
-			A=0;
+			HAL_Delay(1000);
+			ReadFlag = 1;
+			HAL_Delay(1000);
+			State = 1;
+			A = 9 ;
 		}
+
+			if(State == 1 && A == 9){
+//				strcpy(D,ReadBack);//push readback in D array
+//				D[0] = strtol(ReadBack[0], NULL, 16);
+//				D[0] = ReadBack[0];
+				HAL_Delay(1000);
+				A = 10;
+				HAL_Delay(1000);
+			}
+
+			if(A==10){
+				if (ReadBack[0] == 0){
+					B = 4;
+					HAL_UART_Transmit(&hlpuart1, S, 50, 10);
+					State = 0;
+				}
+				else if(ReadBack[0] == 1){
+					B = 1;
+					HAL_UART_Transmit(&hlpuart1, S1, 50, 10);
+					State = 0;
+				}
+				else if(ReadBack[0] == 2){
+					B = 2;
+					HAL_UART_Transmit(&hlpuart1, S2, 50, 10);
+					State = 0;
+				}
+				else if(ReadBack[0] == 3){
+					B = 3;
+					HAL_UART_Transmit(&hlpuart1, S3, 50, 10);
+					State = 0;
+				}
+				HAL_UART_Transmit(&hlpuart1,"YOU ARE NOOB,LOSER UwU.\n\r", 50, 10);
+				A=11;
+		}
+			if(A==11){
+				A=0;
+			}
   EEPROMWriteExample();
   EEPROMReadExample(ReadBack, 1);
   }
@@ -568,12 +587,18 @@ void EEPROMWriteExample() {
 	 data[3]=0x00;
 		HAL_I2C_Mem_Write_IT(&hi2c1, EEPROM_ADDR, 0x2C, I2C_MEMADD_SIZE_16BIT,data, 1);
 		WriteFlag = 0;
+	if(A==11){
+		 data[0]=0x00;
+		 data[1]=0x00;
+		 data[2]=0x00;
+		 data[3]=0x00;
+	}
 	}
 }
 void EEPROMReadExample(uint8_t *Rdata, uint16_t len) {
-	if (ReadFlag && hi2c1.State == HAL_I2C_STATE_READY) {
+	if (ReadFlag ==1 && hi2c1.State == HAL_I2C_STATE_READY) {
 		HAL_I2C_Mem_Read_IT(&hi2c1, EEPROM_ADDR, 0x2c, I2C_MEMADD_SIZE_16BIT,Rdata, len);
-		ReadFlag = 0;
+//		ReadFlag = 0;
 	}
 }
 
