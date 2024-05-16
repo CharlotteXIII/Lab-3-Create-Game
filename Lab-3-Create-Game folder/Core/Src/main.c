@@ -268,7 +268,7 @@ int main(void)
 			A=7;
 		}
 		if(A == 7){
-			strcpy(D,ReadBack);//compare
+			strcpy(D,ReadBack);//push readback in D array
 			if (D[0] == 0){
 				B = 4;
 				HAL_UART_Transmit(&hlpuart1, S, 50, 10);
